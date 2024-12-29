@@ -2,12 +2,16 @@ const fs = require("fs");
 const path = require("path");
 
 
+const Assets = {
+  USDT: 1,
+  USDC: 2
+};
+
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // Define Ethereum, L2 chains, and other specific chains of interest
 const ETH_CHAIN = "Ethereum";
 const L2_CHAINS = ["Optimism", "Arbitrum", "Polygon", "zkSync", "Base", "StarkNet", "Scroll", ];
-const TARGET_CHAINS = ["TON", "Solana", "Avalanche"];
 
 /**
  * Check if the cached data is still valid.
@@ -99,11 +103,31 @@ function processStablecoinData(data) {
       }
     }
   }
-  console.log(totalSupplyByChain);
   return totalSupplyByChain;
 }
 
-// Run the script for USDT (assetId = 1)
-getStableCoinCirculation(1).catch((error) => {
-  console.error("Error:", error.message);
-});
+
+function merge(obj1, obj2) {
+  const merged = { ...obj1 };
+
+  for (const key in obj2) {
+    if (merged.hasOwnProperty(key)) {
+      merged[key] += obj2[key];
+    } else {
+      merged[key] = obj2[key];
+    }
+  }
+  return merged;
+}
+
+async function main() {
+  // Run the script for USDT (assetId = 1)
+  const usdtTotalSupply = await getStableCoinCirculation(Assets.USDT);
+  const usdcTotalSupply = await getStableCoinCirculation(Assets.USDC);
+  const totalSupply = merge(usdtTotalSupply, usdcTotalSupply);
+  for (const symbol of ['Ethereum L1 + L2', 'Solana', 'TON', 'Avalanche', 'Near', 'Aptos', 'Sui']) {
+    console.log(symbol, totalSupply[symbol]);
+  }
+}
+
+main().catch(console.error);
