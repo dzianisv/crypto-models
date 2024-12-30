@@ -1,11 +1,10 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path"
 
+import { fileURLToPath } from "url";
 
-const Assets = {
-  USDT: 1,
-  USDC: 2
-};
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);;
 
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
@@ -50,15 +49,23 @@ function saveCache(cacheFilePath, data) {
 async function getStableCoinCirculation(assetId) {
   let data;
   // Define constants
-  const CACHE_FILE = path.join(__dirname, `${assetId}.cache.json`);
+
+  const cacheDir = path.join(__dirname, '.cache');
+
+  // Check if the cache directory exists, if not, create it
+  if (!fs.existsSync(cacheDir)) {
+      fs.mkdirSync(cacheDir);
+  }
+
+  const cache_file = path.join(cacheDir, `${assetId}.json`);
 
   // Check if cache is valid
-  if (isCacheValid(CACHE_FILE)) {
-    console.log("Using cached data...");
-    data = loadCache(CACHE_FILE);
+  if (isCacheValid(cache_file)) {
+    data = loadCache(cache_file);
   } else {
-    console.log("Fetching fresh data from API...");
-    const response = await fetch(`https://stablecoins.llama.fi/stablecoin/${assetId}`);
+    const url = `https://stablecoins.llama.fi/stablecoin/${assetId}`;
+    console.log(`GET ${url}`);
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error(`HTTP Error: ${response.status}`);
@@ -67,10 +74,10 @@ async function getStableCoinCirculation(assetId) {
     data = await response.json();
 
     // Save the fresh data to the cache
-    saveCache(CACHE_FILE, data);
+    saveCache(cache_file, data);
   }
 
-  processStablecoinData(data);
+  return processStablecoinData(data);
 }
 
 /**
@@ -120,14 +127,52 @@ function merge(obj1, obj2) {
   return merged;
 }
 
-async function main() {
-  // Run the script for USDT (assetId = 1)
-  const usdtTotalSupply = await getStableCoinCirculation(Assets.USDT);
-  const usdcTotalSupply = await getStableCoinCirculation(Assets.USDC);
-  const totalSupply = merge(usdtTotalSupply, usdcTotalSupply);
-  for (const symbol of ['Ethereum L1 + L2', 'Solana', 'TON', 'Avalanche', 'Near', 'Aptos', 'Sui']) {
-    console.log(symbol, totalSupply[symbol]);
+/**
+ * Fetch and cache the list of assets from the API.
+ */
+async function fetchAndCacheAssets() {
+  const cacheDir = path.join(__dirname, '.cache');
+  const cacheFilePath = path.join(cacheDir, 'assets.json');
+
+  // Check if the cache directory exists, if not, create it
+  if (!fs.existsSync(cacheDir)) {
+    fs.mkdirSync(cacheDir);
+  }
+
+  // Check if cache is valid
+  if (isCacheValid(cacheFilePath)) {
+    return loadCache(cacheFilePath);
+  } else {
+    const url = "https://stablecoins.llama.fi/stablecoins";
+    console.log(`GET ${url}`);
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Filter assets with "pegMechanism": "fiat-backed"
+    const fiatBackedAssets = data.peggedAssets.filter(asset => asset.pegMechanism === "fiat-backed");
+
+    // Save the filtered data to the cache
+    saveCache(cacheFilePath, fiatBackedAssets);
+
+    return fiatBackedAssets;
   }
 }
 
-main().catch(console.error);
+// Update the getStableCoinsTotalSupply function to use the fetched assets
+export async function getStableCoinsTotalSupply() {
+  let totalSupply = {};
+  const assets = await fetchAndCacheAssets();
+
+  for (let asset of assets) {
+    console.log(`Fetching total supply of ${asset.name}...`);
+    const tokenTotalSupply = await getStableCoinCirculation(asset.id);
+    totalSupply = merge(totalSupply, tokenTotalSupply);
+  }
+
+  return totalSupply;
+}
