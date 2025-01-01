@@ -99,7 +99,7 @@ def fetch_and_cache_data(cg, token_id, from_timestamp, to_timestamp, cache_file)
     return data
 
 def _get_historical_chain_tvl(chain_name):
-    # Construct the API URL
+    # Construct the API URL https://defillama.com/docs/api
     url = f"https://api.llama.fi/v2/historicalChainTvl/{chain_name}"
     params = {
         'chain': chain_name
