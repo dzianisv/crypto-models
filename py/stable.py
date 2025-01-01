@@ -66,6 +66,7 @@ def process_stablecoin_data(data):
 
     # Convert the records to a DataFrame
     df = pd.DataFrame(records)
+    df['Date'] = pd.to_datetime(df['Date'])  # Convert 'Date' column to datetime
     df = df.pivot(index='Date', columns='Chain', values='Supply').fillna(0)
     return df
 
@@ -120,7 +121,7 @@ def plot_stablecoin_supply(df):
     plt.tight_layout()
     plt.show()
 
-def get_filtered_stablecoins_total_supply(chains = ["Ethereum", "TON", "Avalanche", "Solana"]):
+def get_filtered_stablecoins_total_supply(chains = ["Ethereum", "TON", "Avalanche", "Solana", "Tron"]):
     total_supply_df = get_stablecoins_total_supply()
     # Define L2 chains to merge with Ethereum
     l2_chains = ["Base", "Optimism", "Arbitrum", "Polygon", "zkSync Lite", "StarkNet", "Scroll"]
