@@ -164,6 +164,7 @@ async function fetchAndCacheAssets() {
 }
 
 // Update the getStableCoinsTotalSupply function to use the fetched assets
+// returns object, key - chain name, value - array of [unix timestamp, total supply]
 export async function getStableCoinsTotalSupply() {
   let totalSupply = {};
   const assets = await fetchAndCacheAssets();
