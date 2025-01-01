@@ -192,7 +192,7 @@ def main():
     # Plot Market Cap to TVL
     market_cap_to_tlv.plot(figsize=(14, 8), title='Market Cap to TVL')
     plt.title('Market Cap to TVL')
-    plt.xlabel('Chain')
+    plt.xlabel('Date')
     plt.ylabel('Market Cap / TVL')
     plt.tight_layout()
     plt.savefig('market_cap_to_tvl.png')
