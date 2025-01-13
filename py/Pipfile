@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 requests = "*"
 pycoingecko = "*"
+pandas = "*"
+matplotlib = "*"
 
 [dev-packages]
 
