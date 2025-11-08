@@ -548,6 +548,68 @@
 
         // Set up realtime updates every 5 minutes
         updateInterval = setInterval(updateData, 5 * 60 * 1000);
+
+        // Debug helper: when URL contains ?debug=1, show simple data diagnostics
+        function computeHistoricalStats(historical) {
+            if (!historical || !historical.chains || !historical.data) return null;
+            const stats = {};
+            for (const chain of historical.chains) {
+                const keyMc = `${chain.name}_marketCap`;
+                const keySs = `${chain.name}_stableSupply`;
+                let mcCount = 0, ssCount = 0;
+                let mcMin = Infinity, mcMax = -Infinity, ssMin = Infinity, ssMax = -Infinity;
+                for (const p of historical.data) {
+                    const mc = p[keyMc];
+                    const ss = p[keySs];
+                    if (mc !== undefined && mc !== null) {
+                        mcCount++;
+                        if (mc < mcMin) mcMin = mc;
+                        if (mc > mcMax) mcMax = mc;
+                    }
+                    if (ss !== undefined && ss !== null) {
+                        ssCount++;
+                        if (ss < ssMin) ssMin = ss;
+                        if (ss > ssMax) ssMax = ss;
+                    }
+                }
+                stats[chain.name] = {
+                    marketCap: { count: mcCount, min: isFinite(mcMin) ? mcMin : null, max: isFinite(mcMax) ? mcMax : null },
+                    stableSupply: { count: ssCount, min: isFinite(ssMin) ? ssMin : null, max: isFinite(ssMax) ? ssMax : null }
+                };
+            }
+            return stats;
+        }
+
+        function renderDebugPanel(stats) {
+            let dbg = document.getElementById('debug');
+            if (!dbg) {
+                dbg = document.createElement('pre');
+                dbg.id = 'debug';
+                dbg.style.background = '#111';
+                dbg.style.color = '#0f0';
+                dbg.style.padding = '10px';
+                dbg.style.marginTop = '10px';
+                dbg.style.fontSize = '12px';
+                document.querySelector('.container').appendChild(dbg);
+            }
+            dbg.textContent = JSON.stringify(stats, null, 2);
+        }
+
+        // If debug flag present in URL, run diagnostics after each update
+        const urlParams = new URLSearchParams(window.location.search);
+        const debugEnabled = urlParams.get('debug') === '1';
+        const originalUpdateData = updateData;
+        if (debugEnabled) {
+            updateData = async function() {
+                await originalUpdateData();
+                try {
+                    const stats = computeHistoricalStats(historicalData);
+                    renderDebugPanel(stats);
+                } catch (e) {
+                    console.error('Debug panel error', e);
+                }
+            };
+        }
     </script>
 </body>
 </html>
