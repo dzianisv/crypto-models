@@ -1,0 +1,17 @@
+{
+  "name": "crypto-models",
+  "version": "1.0.0",
+  "description": "Realtime crypto market cap to stablecoin supply ratios",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 3000",
+    "build": "echo 'No build step required for static site'"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "keywords": ["crypto", "market-cap", "stablecoins", "realtime"],
+  "author": "",
+  "license": "MIT"
+}
