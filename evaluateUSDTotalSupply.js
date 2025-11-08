@@ -118,11 +118,21 @@ async function getHistoricalStableCoinsSupply(days = 30) {
 export async function getRatiosData(days = 365) {
     // Prefer server-side aggregated historical ratios when available (faster and avoids CORS)
     try {
-        const res = await fetch(`/api/ratios?days=${days}`);
-        if (res && res.ok) {
-            const json = await res.json();
-            return json;
-        }
+            // Try the proxy route first (/api/ratios). If that fails in some
+            // Netlify setups or due to a CDN/proxy issue, fall back to the
+            // direct functions path (/.netlify/functions/ratios)
+            let res = await fetchWithRetry(`/api/ratios?days=${days}`);
+            if (res && res.ok) {
+                const json = await res.json();
+                return json;
+            }
+
+            console.warn('/api/ratios failed, trying direct function path');
+            res = await fetchWithRetry(`/.netlify/functions/ratios?days=${days}`);
+            if (res && res.ok) {
+                const json = await res.json();
+                return json;
+            }
     } catch (e) {
         console.warn('Failed to fetch server-side ratios, falling back to client-side generation:', e && e.message);
     }

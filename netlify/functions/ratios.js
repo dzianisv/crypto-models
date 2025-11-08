@@ -99,7 +99,8 @@ exports.handler = async function(event) {
     // For each token, compute market cap time series and synthesize stable supply series
     const chains = TOKENS.map(t => ({ name: t.name }));
     const data = timeline.map(ts => {
-      const point = { date: ts };
+      // normalize timestamp as a number (ms since epoch)
+      const point = { date: Number(ts) || Date.now() };
       return point;
     });
 
@@ -142,7 +143,10 @@ exports.handler = async function(event) {
       current,
       historical: {
         chains,
-        data
+        data,
+        // include a tiny sample of the first few points so clients can quickly
+        // inspect the exact payload shape without dumping the entire series
+        sample: data.slice(0, 3)
       }
     };
 
