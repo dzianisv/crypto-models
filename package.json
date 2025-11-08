@@ -7,11 +7,18 @@
     "start": "npx http-server . -p 3000",
     "build": "echo 'No build step required for static site'"
   },
-  "dependencies": {},
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
   "devDependencies": {
     "http-server": "^14.1.1"
   },
-  "keywords": ["crypto", "market-cap", "stablecoins", "realtime"],
+  "keywords": [
+    "crypto",
+    "market-cap",
+    "stablecoins",
+    "realtime"
+  ],
   "author": "",
   "license": "MIT"
 }

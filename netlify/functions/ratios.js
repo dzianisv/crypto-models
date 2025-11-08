@@ -4,7 +4,7 @@
 // historical stablecoin supply time series (best-effort) so the browser can
 // render long-term charts without doing many client-side requests.
 
-const fetch = global.fetch;
+const fetch = require('node-fetch');
 
 const TOKENS = [
   { name: 'Ethereum', id: 'ethereum', supplyKey: 'Ethereum L1 + L2' },
