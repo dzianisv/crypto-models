@@ -4,7 +4,16 @@
 // historical stablecoin supply time series (best-effort) so the browser can
 // render long-term charts without doing many client-side requests.
 
-const fetch = require('node-fetch');
+// Prefer the runtime's global fetch (Node 18+ / Netlify) and fall back to
+// dynamically importing node-fetch only if needed. This avoids requiring the
+// ESM-only node-fetch v3 at module load time which would crash in CommonJS.
+let fetch;
+if (typeof globalThis.fetch === 'function') {
+  fetch = globalThis.fetch.bind(globalThis);
+} else {
+  // lazy dynamic import to support environments where node-fetch is available
+  fetch = (...args) => import('node-fetch').then(mod => mod.default(...args));
+}
 
 const TOKENS = [
   { name: 'Ethereum', id: 'ethereum', supplyKey: 'Ethereum L1 + L2' },
